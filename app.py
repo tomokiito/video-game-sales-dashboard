@@ -85,7 +85,7 @@ violin_plot = alt.Chart(filtered).transform_density(
     y=alt.Y('Global_Sales:Q', title='Global Sales (Millions)', scale=alt.Scale(type='log')),
     x=alt.X('Density:Q', stack='center', axis=None),
     color=alt.Color('Category_Value:N', legend=None),
-    column=alt.Column('Category_Value:N', sort='-y', header=alt.Header(labelOrient='bottom'))
+    column=alt.Column('Category_Value:N', header=alt.Header(labelOrient='bottom'))
 ).properties(height=400, width=100)
 
 st.altair_chart(violin_plot, use_container_width=True)
