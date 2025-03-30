@@ -74,18 +74,22 @@ filtered = violin_data[
 ]
 
 # Violin-style plot using density estimation (Altair doesn't support real violin plots)
+
+# Set max limit for density to avoid invisibility
+violin_extent = [0.01, filtered['Global_Sales'].max()] 
+
 violin_plot = alt.Chart(filtered).transform_density(
     'Global_Sales',
     as_=['Global_Sales', 'Density'],
     groupby=['Category_Value'],
-    extent=[0, filtered['Global_Sales'].quantile(0.95)],
+    extent=violin_extent,
     counts=True,
     steps=200
 ).mark_area(orient='horizontal', opacity=0.6).encode(
     y=alt.Y('Global_Sales:Q', title='Global Sales (Millions)', scale=alt.Scale(type='log')),
     x=alt.X('Density:Q', stack='center', axis=None),
     color=alt.Color('Category_Value:N', title=category_type),
-    tooltip=['Category_Value:N', 'Global_Sales:Q']
+    tooltip=['Category_Value:N', alt.Tooltip('Global_Sales:Q', format='.2f')]
 ).properties(
     height=400,
     width=800,
@@ -93,6 +97,7 @@ violin_plot = alt.Chart(filtered).transform_density(
 )
 
 st.altair_chart(violin_plot, use_container_width=True)
+
 
 #######################
 
