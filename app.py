@@ -9,7 +9,7 @@ st.set_page_config(page_title="Video Game Platform Analysis", layout="wide")
 
 #######################
 
-st.title("1. 🎮 Video Game Platform Sales Visualization")
+st.title("🎮 Video Game Platform Sales Visualization")
 
 @st.cache_data
 def load_data():
@@ -49,7 +49,7 @@ st.altair_chart(chart, use_container_width=True)
 
 #######################
 
-st.header("2. 🎻 Global Sales Distribution by Category")
+st.header("2. Global Sales Distribution by Category")
 
 # Merge and reshape data for Platform / Genre / Rating
 violin_data = pd.concat([
@@ -61,23 +61,35 @@ violin_data = pd.concat([
 # Category selector
 category_type = st.selectbox("Select Category Type", ['Platform', 'Genre', 'Rating'])
 
-# Filter to top 10 categories by total sales
+# Filter to selected category type
+category_df = violin_data[violin_data['Category'] == category_type]
+
+# Get top 10 categories by total sales
 top_categories = (
-    violin_data[violin_data['Category'] == category_type]
-    .groupby('Category_Value')['Global_Sales'].sum()
-    .nlargest(10).index
+    category_df.groupby('Category_Value')['Global_Sales']
+    .sum()
+    .sort_values(ascending=False)
+    .head(10)
+    .index
+    .tolist()
 )
 
-filtered = violin_data[
-    (violin_data['Category'] == category_type) &
-    (violin_data['Category_Value'].isin(top_categories))
-]
+# Display mode selector
+display_mode = st.radio("Display Mode", ["All Categories", "Single Category"])
 
-# Violin-style plot using density estimation (Altair doesn't support real violin plots)
+# Filter data depending on mode
+if display_mode == "Single Category":
+    selected = st.selectbox("Select a Category", top_categories)
+    filtered = category_df[category_df['Category_Value'] == selected]
+    chart_title = f"Violin-style Sales Distribution: {selected}"
+else:
+    filtered = category_df[category_df['Category_Value'].isin(top_categories)]
+    chart_title = f"Violin-style Sales Distribution by {category_type} (Top 10)"
 
-# Set max limit for density to avoid invisibility
-violin_extent = [0.01, filtered['Global_Sales'].max()] 
+# Set density extent
+violin_extent = [0.01, filtered['Global_Sales'].max()]
 
+# Violin-style Altair chart
 violin_plot = alt.Chart(filtered).transform_density(
     'Global_Sales',
     as_=['Global_Sales', 'Density'],
@@ -88,12 +100,12 @@ violin_plot = alt.Chart(filtered).transform_density(
 ).mark_area(orient='horizontal', opacity=0.6).encode(
     y=alt.Y('Global_Sales:Q', title='Global Sales (Millions)', scale=alt.Scale(type='log')),
     x=alt.X('Density:Q', stack='center', axis=None),
-    color=alt.Color('Category_Value:N', title=category_type),
+    color=alt.Color('Category_Value:N', title=category_type, sort=top_categories),
     tooltip=['Category_Value:N', alt.Tooltip('Global_Sales:Q', format='.2f')]
 ).properties(
     height=400,
     width=800,
-    title=f"Violin-style Sales Distribution by {category_type} (Top 10)"
+    title=chart_title
 )
 
 st.altair_chart(violin_plot, use_container_width=True)
@@ -101,7 +113,7 @@ st.altair_chart(violin_plot, use_container_width=True)
 
 #######################
 
-st.header("3. 📈 Platform Popularity Forecast (2017–2020)")
+st.header("3. Platform Popularity Forecast")
 
 # Linear regression to predict market share by company
 from sklearn.linear_model import LinearRegression
