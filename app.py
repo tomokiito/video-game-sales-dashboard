@@ -81,15 +81,18 @@ violin_plot = alt.Chart(filtered).transform_density(
     extent=[0, filtered['Global_Sales'].quantile(0.95)],
     counts=True,
     steps=200
-).mark_area(orient='horizontal', opacity=0.7).encode(
+).mark_area(orient='horizontal', opacity=0.6).encode(
     y=alt.Y('Global_Sales:Q', title='Global Sales (Millions)', scale=alt.Scale(type='log')),
     x=alt.X('Density:Q', stack='center', axis=None),
-    color=alt.Color('Category_Value:N', legend=None),
-    column=alt.Column('Category_Value:N', header=alt.Header(labelOrient='bottom'))
-).properties(height=400, width=100)
+    color=alt.Color('Category_Value:N', title=category_type),
+    tooltip=['Category_Value:N', 'Global_Sales:Q']
+).properties(
+    height=400,
+    width=800,
+    title=f"Violin-style Sales Distribution by {category_type} (Top 10)"
+)
 
 st.altair_chart(violin_plot, use_container_width=True)
-
 
 #######################
 
